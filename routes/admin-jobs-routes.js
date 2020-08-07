@@ -21,7 +21,7 @@ router.post(
   ],
   adminJobsController.addJob
 );
-// Tested
+
 router.patch(
   "/jobs/jafFiles/:jid",
   fileUpload.array("resumeFiles", 3),
@@ -51,11 +51,6 @@ router.patch(
     check("jobCategory").not().isEmpty(),
   ],
   adminJobsController.updateJobById
-);
-
-router.patch(
-  "/jobs/updateEligibilityCriteria/:jid",
-  adminJobsController.updateEligibilityCriteria
 );
 
 // Tested

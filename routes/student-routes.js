@@ -44,6 +44,7 @@ router.patch(
     check("name").not().isEmpty(),
     check("instituteEmail").normalizeEmail().isEmail(),
     check("personalEmail").normalizeEmail().isEmail(),
+    check("password").isLength({ min: 8 }),
   ],
   studentControllers.editProfile
 );

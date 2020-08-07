@@ -3,7 +3,6 @@ const { check } = require("express-validator");
 const router = express.Router();
 const fileUpload = require("../middleware/file-upload");
 const adminJobsController = require("../controllers/admin-jobs-controllers");
-const adminController = require("../controllers/admin-controllers");
 const coordinatorJobsController = require("../controllers/coordinator-job-controllers");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/roles-auth");
@@ -21,8 +20,6 @@ router.patch("/resetPassword/:cid", coordinatorJobsController.resetPassword);
 // Tested
 router.get("/jobs", adminJobsController.getAllJobs);
 
-
-router.get("/home", adminController.home);
 // Tested
 router.post(
   "/jobs/addJob",

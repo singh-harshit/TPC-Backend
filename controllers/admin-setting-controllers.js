@@ -6,14 +6,8 @@ const Admin = require("../models/admin");
 const Coordinator = require("../models/coordinators");
 const Role = require("../models/Role");
 
-// Function for filtering only unique elements from an array
-const unique = (value, index, self) => {
-  return self.indexOf(value) === index;
-};
-
 const setJobClassifications = async (req, res, next) => {
-  let { classifications } = req.body;
-  classifications = classifications.filter(unique);
+  const { classifications } = req.body;
   try {
     await Admin.updateOne(
       {},
@@ -28,8 +22,7 @@ const setJobClassifications = async (req, res, next) => {
 };
 
 const setJobSteps = async (req, res, next) => {
-  let { steps } = req.body;
-  steps = steps.filter(unique);
+  const { steps } = req.body;
   try {
     await Admin.updateOne({}, { $set: { allJobSteps: steps } });
   } catch (err) {
@@ -42,7 +35,6 @@ const setJobSteps = async (req, res, next) => {
 
 const setJobStatus = async (req, res, next) => {
   const { status } = req.body;
-  status = status.filter(unique);
   try {
     await Admin.updateOne({}, { $set: { allJobStatus: status } });
   } catch (err) {
@@ -55,7 +47,6 @@ const setJobStatus = async (req, res, next) => {
 
 const setStudentPrograms = async (req, res, next) => {
   const { programs } = req.body;
-  programs = programs.filter(unique);
   try {
     await Admin.updateOne({}, { $set: { allStudentPrograms: programs } });
   } catch (err) {
@@ -67,8 +58,8 @@ const setStudentPrograms = async (req, res, next) => {
 };
 
 const setStudentProgramsAndCourses = async (req, res, next) => {
-  let { programsWithCourses } = req.body;
-  programsWithCourses = programsWithCourses.filter(unique);
+  const { programsWithCourses } = req.body;
+  console.log(programsWithCourses);
   try {
     await Admin.updateOne(
       {},

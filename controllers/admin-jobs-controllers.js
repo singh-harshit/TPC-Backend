@@ -211,10 +211,7 @@ const getJobById = async (req, res, next) => {
       return next(new HttpError("Job not found", 404));
     }
     let student;
-    if (
-      jobDetails.jobStatus !== "Pending Approval" &&
-      jobDetails.jobStatus !== "Dropped"
-    ) {
+    if (jobDetails.jobStatus !== "Pending Approval") {
       for (studId of jobDetails.progressSteps[0].qualifiedStudents) {
         student = await Student.findById(studId, {
           name: 1,
@@ -270,107 +267,6 @@ const updateJobById = async (req, res, next) => {
   job.schedule = schedule;
   job.eligibilityCriteria = eligibilityCriteria;
   job.publicRemarks = publicRemarks;
-  try {
-    await job.save();
-  } catch (err) {
-    console.log(err);
-    const error = new HttpError("Something went wrong! Try again later", 500);
-    return next(error);
-  }
-  res.json({ updatedJobDetails: job });
-};
- 
-const updateEligibilityCriteria = async (req, res, next) => {
-  const jobId = req.params.jid;
-  let job;
-  const { eligibilityCriteria } = req.body;
-  try {
-    job = await Job.findById(jobId);
-  } catch (err) {
-    console.log(err);
-    const error = new HttpError("Something went wrong! Try again later", 500);
-    return next(error);
-  }
-  if (!job) {
-    return next(new HttpError("Job doesn't exist", 404));
-  }
-  job.eligibilityCriteria = eligibilityCriteria;
-  let eligibleStudents = job.eligibleStudents;
-  if (job.jobStatus === "Open") {
-    console.log("iiiii");
-    let students = await Student.find(
-      {
-        approvalStatus: "Active",
-        registrationFor: job.jobType,
-      },
-      {
-        program: 1,
-        course: 1,
-        cpi: 1,
-        tenthMarks: 1,
-        twelthMarks: 1,
-        bachelorsMarks: 1,
-        mastersMarks: 1,
-        placement: 1,
-      }
-    );
-    let filteredStudents = [];
-    for (eachStudent of students) {
-      for (each of eligibilityCriteria) {
-        if (
-          each.program == eachStudent.program &&
-          each.course.indexOf(eachStudent.course) != -1 &&
-          eachStudent.cpi >= each.cpiCutOff &&
-          eachStudent.tenthMarks >= each.tenthMarks &&
-          eachStudent.twelthMarks >= each.twelthMarks &&
-          eachStudent.bachelorsMarks >= each.bachelorsMarks &&
-          eachStudent.mastersMarks >= each.mastersMarks
-        ) {
-          filteredStudents.push(eachStudent);
-          break;
-        }
-      }
-    }
-    console.log(filteredStudents);
-    for (eachStudent of filteredStudents) {
-      let eligible = false;
-      if (eachStudent.placement.status === "Unplaced") {
-        eligible = true;
-      } else {
-        const A1count = eachStudent.placement.applicationCount.A1count;
-        const PSUcount = eachStudent.placement.applicationCount.PSUcount;
-        const A2count = eachStudent.placement.applicationCount.A2count;
-        const B1count = eachStudent.placement.applicationCount.B1count;
-        if (eachStudent.placement.category === "A1") eligible = false;
-        else if (eachStudent.placement.category === "A2") {
-          if (job.jobCategory === "A1" && A1count < 2) eligible = true;
-          else if (job.jobCategory === "PSU" && PSUcount < 2) eligible = true;
-        } else if (eachStudent.placement.category === "PSU") {
-          if (job.jobCategory === "A1" && A1count < 2) eligible = true;
-        } else if (eachStudent.placement.category === "B1") {
-          if (job.jobCategory === "A1" && A1count < 2) eligible = true;
-          else if (job.jobCategory === "PSU" && PSUcount < 2) eligible = true;
-          else if (job.jobCategory === "A2" && A2count < 2) eligible = true;
-        } else if (eachStudent.placement.category === "B2") {
-          if (job.jobCategory === "A1" && A1count < 2) eligible = true;
-          else if (job.jobCategory === "PSU" && PSUcount < 2) eligible = true;
-          else if (job.jobCategory === "A2" && A2count < 2) eligible = true;
-          else if (job.jobCategory === "B1" && B1count < 2) eligible = true;
-        }
-      }
-
-      if (
-        eligible === true &&
-        eligibleStudents.indexOf(eachStudent._id) == -1
-      ) {
-        job.eligibleStudents.push(eachStudent._id);
-        await StudentJob.updateOne(
-          { studId: eachStudent._id },
-          { $addToSet: { eligibleJobs: jobId } }
-        );
-      }
-    }
-  }
   try {
     await job.save();
   } catch (err) {
@@ -684,7 +580,7 @@ const activeApplicantsByJobId = async (req, res, next) => {
   let student;
   let job;
   try {
-    job = await Job.findById(jobId, { progressSteps: 1, jobStatus: 1 });
+    job = await Job.findById(jobId, { progressSteps: 1 });
   } catch (err) {
     console.log(err);
     const error = new HttpError("Something went wrong! Try again later", 500);
@@ -693,8 +589,6 @@ const activeApplicantsByJobId = async (req, res, next) => {
   if (!job) {
     return next(new HttpError("Job not Found", 404));
   }
-  if (job.jobStatus === "Pending Approval")
-    return res.json({ activeStudents: activeStudents });
   let Size = job.progressSteps.length;
   let activeStudentIds = job.progressSteps[Size - 1].qualifiedStudents;
   let stepName = job.progressSteps[Size - 1].name;
@@ -807,7 +701,6 @@ exports.deleteJob = deleteJob;
 exports.approvedCompanies = approvedCompanies;
 exports.getJobById = getJobById;
 exports.updateJobById = updateJobById;
-exports.updateEligibilityCriteria = updateEligibilityCriteria;
 exports.setJafFiles = setJafFiles;
 exports.markProgress = markProgress;
 exports.addNewStep = addNewStep;

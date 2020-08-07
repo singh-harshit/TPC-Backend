@@ -6,9 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
-    "build": "cd.. && cd frontend && npm run build",
-    "lib-install": "npm install && cd .. && cd frontend && npm install",
-    "heroku-postbuild": "npm run lib-install && npm run build",
     "Frontend": "cd .. && cd frontend && npm start",
     "dev": "concurrently -n 'server,client' -c 'red,green' \"nodemon app.js\" \"npm run Frontend\""
   },

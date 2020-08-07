@@ -34,7 +34,7 @@ const adminLogin = async (req, res, next) => {
 };
 
 const home = async (req, res, next) => {
-  let internshipStats, fteStats, combinedStats, onlyCpiUpdate;
+  let internshipStats, fteStats, combinedStats;
   try {
     let students = await Student.find(
       {},
@@ -85,10 +85,9 @@ const home = async (req, res, next) => {
         companyRequests: 1,
         allStudentPrograms: 1,
         allStudentProgramsAndCourses: 1,
-        onlyCpiUpdate: 1,
       }
     );
-    onlyCpiUpdate = admin.onlyCpiUpdate;
+
     let programsAndCourses = admin.allStudentProgramsAndCourses;
     let internData = {};
     let fteData = {};
@@ -294,7 +293,6 @@ const home = async (req, res, next) => {
     internshipStats: internshipStats,
     fteStats: fteStats,
     combinedStats: combinedStats,
-    onlyCpiUpdate: onlyCpiUpdate,
   });
 };
 
@@ -310,9 +308,11 @@ const getAllCompanies = async (req, res, next) => {
       select: "jobTitle jobCategory jobStatus",
     });
   } catch (err) {
+    console.log(err);
     const error = new HttpError("Something went wrong ! try again later", 500);
     return next(error);
   }
+  console.log(companyList);
   res.json({
     companyList: companyList,
   });

@@ -1,4 +1,3 @@
-const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
@@ -12,6 +11,7 @@ const getAllStudents = async (req, res, next) => {
   let studentsInfo;
   try {
     studentsInfo = await Student.aggregate([
+      // { $match: { registrationFor: "FTE" } },
       {
         $project: {
           name: 1,
@@ -27,7 +27,7 @@ const getAllStudents = async (req, res, next) => {
           approvalStatus: 1,
           status: {
             $cond: {
-              if: { $eq: ["$placement.status", "Placed"] },
+              if: { $eq: ["$placement.status", "placed"] },
               then: {
                 $concat: ["$placement.status", " in ", "$placement.category"],
               },
@@ -115,10 +115,6 @@ const getStudentById = async (req, res, next) => {
       cpi: 1,
       personalEmail: 1,
       approvalStatus: 1,
-      tenthMarks: 1,
-      twelthMarks: 1,
-      bachelorsMarks: 1,
-      mastersMarks: 1,
       image: 1,
     }).session(sess);
     studentAppliedJobs = await StudentJob.findOne(
@@ -166,10 +162,6 @@ const updateStudentById = async (req, res, next) => {
     spi,
     cpi,
     personalEmail,
-    tenthMarks,
-    twelthMarks,
-    bachelorsMarks,
-    mastersMarks,
   } = req.body;
   try {
     await Student.updateOne(
@@ -188,10 +180,6 @@ const updateStudentById = async (req, res, next) => {
           instituteEmail: instituteEmail,
           personalEmail: personalEmail,
           mobileNumber: mobileNumber,
-          tenthMarks: tenthMarks,
-          twelthMarks: twelthMarks,
-          bachelorsMarks: bachelorsMarks,
-          mastersMarks: mastersMarks,
         },
       }
     );
@@ -236,15 +224,6 @@ const changeStatus = async (req, res, next) => {
     sess.startTransaction();
     student = await Student.findById(studId).session(sess);
     student.approvalStatus = status;
-    if (status == "Active") {
-      studJob = await StudentJob.findOne({ studId: studId }).session(sess);
-      if (!studJob) {
-        const newStudentJob = new StudentJob({
-          studId: studId,
-        });
-        await newStudentJob.save({ session: sess });
-      }
-    }
     await student.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {

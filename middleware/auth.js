@@ -20,12 +20,13 @@ const refreshTokens = async (token, refreshToken) => {
   const user = await userSchema.findById(userId);
   if (!user) return {};
 
+  console.log(user);
+
   const refreshSecret = process.env.jwtPrivateKey + user.password;
 
   try {
     jwt.verify(refreshToken, refreshSecret);
   } catch (err) {
-    console.log("Your password has been reset");
     return {};
   }
 
@@ -54,7 +55,9 @@ module.exports = async (req, res, next) => {
       res.set("x-auth-token", newTokens.token);
       res.set("x-refresh-token", newTokens.refreshToken);
       req.payload = newTokens.payload;
-    } else return next(new HttpError("LogIn Required", 350));
+    }
+
+    //return next(new HttpError("Invalid token.", 400));
   }
   next();
 };

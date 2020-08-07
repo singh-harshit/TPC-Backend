@@ -137,8 +137,6 @@ const approveRequest = async (req, res, next) => {
           cpi: 1,
           tenthMarks: 1,
           twelthMarks: 1,
-          bachelorsMarks: 1,
-          mastersMarks: 1,
           placement: 1,
         }
       );
@@ -148,24 +146,19 @@ const approveRequest = async (req, res, next) => {
       ).session(sess);
       let filteredStudents = [];
       for (eachStudent of students) {
-        console.log(eachStudent);
         for (each of eligibilityCriteria) {
           if (
             each.program == eachStudent.program &&
             each.course.indexOf(eachStudent.course) != -1 &&
             eachStudent.cpi >= each.cpiCutOff &&
             eachStudent.tenthMarks >= each.tenthMarks &&
-            eachStudent.twelthMarks >= each.twelthMarks &&
-            eachStudent.bachelorsMarks >= each.bachelorsMarks &&
-            eachStudent.mastersMarks >= each.mastersMarks
+            eachStudent.twelthMarks >= each.twelthMarks
           ) {
             filteredStudents.push(eachStudent);
             break;
           }
         }
       }
-      console.log("Filtered Students");
-      console.log(filteredStudents);
       // Internal Filtering
       for (eachStudent of filteredStudents) {
         let eligible = false;
@@ -285,28 +278,13 @@ const deleteRequest = async (req, res, next) => {
     }
     res.json({ message: "Request Deleted" });
   } else if (deletionType === "J") {
-    let job, companyId;
-    try {
-      job = await Job.findById(Id);
-    } catch (err) {
-      return next(
-        new HttpError(
-          "Enter a valid deletion Type[S - Student,C - Company, J - Job]",
-          500
-        )
-      );
-    }
-    companyId = job.companyId;
-    console.log(job);
-    console.log(companyId);
+    let job;
     try {
       const sess = await mongoose.startSession();
       sess.startTransaction();
-      await Job.deleteOne({ _id: Id }).session(sess);
-      await Company.updateOne(
-        { _id: companyId },
-        { $pull: { jobs: { $in: [Id] } } }
-      ).session(sess);
+      job = await Job.findById(Id).session(sess);
+      job.jobStatus = "Dropped";
+      await job.save({ session: sess });
       await Admin.updateOne(
         {},
         { $pull: { jobApproval: { $in: [Id] } } }

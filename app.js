@@ -29,7 +29,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(json2xls.middleware);
 const MONGODB_URI =
-  "mongodb+srv://Vivek:tpcportal@tpc-portal-server-oxadw.mongodb.net/Tpc_Portal_Testing?retryWrites=true&w=majority";
+  "mongodb+srv://Vivek:tpcportal@tpc-portal-server-oxadw.mongodb.net/Tpc_Portal?retryWrites=true&w=majority";
 
 // Data parsing
 app.use(express.json());
@@ -108,17 +108,10 @@ app.use((error, req, res, next) => {
     .json({ message: error.message || "An unknown error occured" });
 });
 
-mongoose.connect(process.env.MONGODB_URI || MONGODB_URI,
-  {
-    useNewUrlParser:true,
-    useUnifiedTopology:true,
-  })
+mongoose
+  .connect(MONGODB_URI)
   .then(() => {
     console.log("Connection established to Database");
-    if(process.env.Node_ENV === 'production')
-    {
-      app.use(express.static('../frontend/build'))
-    }
     app.listen(5000);
   })
   .catch((err) => {

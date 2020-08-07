@@ -159,6 +159,7 @@ const home = async (req, res, next) => {
         match: { jobStatus: "Open" },
       })
       .execPopulate();
+    console.log(studentJobs);
   } catch (err) {
     console.log(err);
     const error = new HttpError("Something went wrong! Try again later", 500);
@@ -166,32 +167,30 @@ const home = async (req, res, next) => {
   }
   let upComingDates = [];
   let currDate = new Date();
-  if (studentJobs.appliedJobs.length != 0) {
+  if (!studentJobs.appliedJobs) {
     for (eachJob of studentJobs.appliedJobs) {
       if (
-        eachJob.jobId != null &&
         eachJob.studentStatus !== "Rejected" &&
         eachJob.studentStatus !== "Selected" &&
         eachJob.jobId.jobStatus === "Ongoing"
       ) {
         for (eachSchedule of eachJob.jobId.schedule) {
-          if (eachSchedule.stepDate) {
-            var first = eachSchedule.stepDate.split(",");
-            var d = first[0].split("-");
-            console.log(d);
-            let comingDate = new Date(
-              parseInt(d[0]),
-              parseInt(d[1]),
-              parseInt(d[2])
-            );
-            if (comingDate >= currDate) {
-              let newUpcoming = {
-                companyName: eachJob.jobId.companyName,
-                stepName: eachSchedule.stepName,
-                stepDate: eachSchedule.stepDate,
-              };
-              upComingDates.push(newUpcoming);
-            }
+          var first = eachSchedule.stepDate.split(",");
+          var d = first[0].split("/");
+          console.log(d);
+          let comingDate = new Date(
+            parseInt(d[0]),
+            parseInt(d[1]),
+            parseInt(d[2])
+          );
+          console.log(comingDate);
+          if (comingDate >= currDate) {
+            let newUpcoming = {
+              companyName: eachJob.jobId.companyName,
+              stepName: eachSchedule.stepName,
+              stepDate: eachSchedule.stepDate,
+            };
+            upComingDates.push(newUpcoming);
           }
         }
       }
@@ -207,10 +206,8 @@ const home = async (req, res, next) => {
 
 const profile = async (req, res, next) => {
   const studentId = req.params.sid;
-  let studentInfo, admin;
+  let studentInfo;
   try {
-    const sess = await mongoose.startSession();
-    sess.startTransaction();
     studentInfo = await Student.findById(studentId, {
       name: 1,
       rollNo: 1,
@@ -229,17 +226,14 @@ const profile = async (req, res, next) => {
       bachelorsMarks: 1,
       mastersMarks: 1,
       approvalStatus: 1,
-      resumeFile: 1,
       image: 1,
-    }).session(sess);
-    admin = await Admin.findOne({}, { onlyCpiUpdate: 1 }).session(sess);
-    await sess.commitTransaction();
+    });
   } catch (err) {
     console.log(err);
     const error = new HttpError("Something went wrong! Try again later", 500);
     return next(error);
   }
-  res.json({ studentInfo: studentInfo, onlyCpiUpdate: admin.onlyCpiUpdate });
+  res.json({ studentInfo: studentInfo });
 };
 
 const editProfile = async (req, res, next) => {
@@ -541,6 +535,7 @@ const resumeUpload = async (req, res, next) => {
   }
   const studentId = req.params.sid;
   const { resumeLink } = req.body;
+  console.log(req.file.path);
   const resumeFile = "http://localhost:5000/" + req.file.path;
   let studentInfo;
   try {
@@ -554,15 +549,13 @@ const resumeUpload = async (req, res, next) => {
   }
   // Deleting previous file if any from our server
 
+  console.log(req.file.path);
   if (studentInfo.resumeFile) {
     const path = studentInfo.resumeFile.split("/localhost:5000/")[1];
 
-    if (fs.existsSync(path)) {
-      //file exists
-      fs.unlink(path, (err) => {
-        console.log(err);
-      });
-    }
+    fs.unlink(path, (err) => {
+      console.log(err);
+    });
   }
   studentInfo.resumeFile = resumeFile;
   studentInfo.resumeLink = resumeLink;

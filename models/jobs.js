@@ -32,8 +32,6 @@ const jobSchema = new Schema({
       cpiCutOff: Number,
       tenthMarks: Number,
       twelthMarks: Number,
-      bachelorsMarks: Number,
-      mastersMarks: Number,
       ctc: Schema.Types.Mixed,
     },
   ],
